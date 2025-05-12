@@ -1,11 +1,18 @@
 import "./_weekview.scss";
+import { PlusIcon } from "lucide-react";
 
 interface WeeklyCalendarProps {
   currentDate: Date; // 현재 보고 있는 날짜
+  showSidebar: boolean; // 사이드바 노출 여부
+  toggleSidebar: () => void; // 토글 핸들러
 }
 
-export function WeekView({ currentDate }: WeeklyCalendarProps) {
-  // 이번주 시작일인 일요일 구하기
+export function WeekView({
+  currentDate,
+  showSidebar,
+  toggleSidebar,
+}: WeeklyCalendarProps) {
+  // 이번 시작일인 일요일 구하기
   const getStartOfWeek = (date: Date) => {
     const result = new Date(date);
 
@@ -124,25 +131,32 @@ export function WeekView({ currentDate }: WeeklyCalendarProps) {
     <div className="weekly-calendar">
       {/* 헤더 */}
       <div className="weekly-calendar__header">
-        <div className="weekly-calendar__time-placeholder" />
-        <div className="weekly-calendar__days-header">
-          {weekDays.map((d, idx) => (
-            <div key={idx} className="weekly-calendar__day-header">
-              {/* 요일 이름 */}
-              <div className="weekly-calendar__day-header-name">
-                {d.dayName}
-              </div>
-              {/* 날짜 숫자, 오늘인 경우 강조 */}
-              <div
-                className={`weekly-calendar__day-header-date ${
-                  d.isToday ? "weekly-calendar__day-header-date--today" : ""
-                }`}
-              >
-                {d.dayNumber}
-              </div>
-            </div>
-          ))}
+        <div className="weekly-calendar__header-first-cell">
+          <div className="weekly-calendar__time-placeholder" />
+          {!showSidebar && (
+            <button
+              className="weekly-calendar__create-button"
+              onClick={toggleSidebar}
+            >
+              <PlusIcon size={25} />
+            </button>
+          )}
         </div>
+
+        {/* 요일 헤더 7칸 */}
+        {weekDays.map((d, i) => (
+          <div key={i} className="weekly-calendar__day-header">
+            <div className="weekly-calendar__day-header-name">{d.dayName}</div>
+            {/* 날짜 숫자, 오늘인 경우 강조 */}
+            <div
+              className={`weekly-calendar__day-header-date ${
+                d.isToday ? "weekly-calendar__day-header-date--today" : ""
+              }`}
+            >
+              {d.dayNumber}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* 시간 축, 날짜별 그리드 */}

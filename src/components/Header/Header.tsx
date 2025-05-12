@@ -11,9 +11,14 @@ import {
 interface HeaderProps {
   currentDate: Date;
   setCurrentDate: (date: Date) => void;
+  toggleSidebar: () => void;
 }
 
-export function Header({ currentDate, setCurrentDate }: HeaderProps) {
+export function Header({
+  currentDate,
+  setCurrentDate,
+  toggleSidebar,
+}: HeaderProps) {
   // 오늘 날짜로 이동
   const goToToday = () => setCurrentDate(new Date());
 
@@ -41,7 +46,7 @@ export function Header({ currentDate, setCurrentDate }: HeaderProps) {
     <header className="header">
       {/* 메뉴 버튼 + 로고 */}
       <div className="header__logo">
-        <button className="header__nav-button">
+        <button className="header__nav-button" onClick={toggleSidebar}>
           <MenuIcon size={20} />
         </button>
         <img src={logo} alt="Logo" className="header__logo-icon" />
