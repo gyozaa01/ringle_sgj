@@ -1,0 +1,111 @@
+@use "../../styles/variables" as vars;
+
+.weekly-calendar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  &__header {
+    display: flex;
+    height: 3.5rem;
+    border-bottom: 1px solid vars.$border-color;
+  }
+
+  &__time-placeholder {
+    width: 4rem;
+    flex-shrink: 0;
+  }
+
+  &__days-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    flex: 1;
+  }
+
+  &__day-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    &-name {
+      font-size: 0.75rem;
+      color: vars.$text-gray;
+    }
+
+    &-date {
+      margin-top: 0.25rem;
+      width: 2rem;
+      height: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 9999px;
+
+      &--today {
+        background-color: vars.$blue-500;
+        color: white;
+      }
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex: 1;
+    overflow: auto;
+  }
+
+  &__time-column {
+    width: 4rem;
+    flex-shrink: 0;
+  }
+
+  &__time-slot {
+    height: 3.5rem;
+    border-top: 1px solid vars.$border-color;
+    padding-right: 0.5rem;
+    text-align: right;
+
+    span {
+      font-size: 0.75rem;
+      color: vars.$text-gray;
+    }
+  }
+
+  &__days-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+  }
+
+  &__cell {
+    height: 3.5rem;
+    border-top: 1px solid vars.$border-color;
+    border-left: 1px solid vars.$border-color;
+    position: relative;
+  }
+
+  &__event {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    margin: 0 0.25rem;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    color: black;
+    overflow: hidden;
+
+    &--yellow {
+      background-color: vars.$yellow-500;
+    }
+    &--green {
+      background-color: vars.$green-500;
+    }
+    &--purple {
+      background-color: vars.$purple-500;
+    }
+  }
+}
