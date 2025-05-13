@@ -6,12 +6,22 @@ import { EventModal } from "@/components/EventModal/EventModal";
 import type { Event } from "@/store/eventsSlice";
 import "./_calendar.scss";
 
+// 로컬 날짜(YYYY-MM-DD) 반환
+function getLocalIsoDate(date: Date = new Date()): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 export function App() {
-  const [currentDate, setCurrentDate] = useState(new Date()); // 현재 선택된 날짜
-  const [showSidebar, setShowSidebar] = useState(true); // 사이드바 보임/숨김
-  const [modalOpen, setModalOpen] = useState(false); // 이벤트 모달 열림/닫힘
-  // 모달에 전달할 초기 이벤트 데이터(start, end, allDay)
-  const [modalData, setModalData] = useState<Partial<Event>>({});
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  // undefined 허용하도록 타입 확장
+  const [modalData, setModalData] = useState<Partial<Event> | undefined>(
+    undefined
+  );
 
   // WeekView에서 클릭된 dateIso(YYYY-MM-DD)와 hour(null=종일 또는 0~23)을 받아서
   // 모달을 원하는 시간대로 열어주는 함수
@@ -31,13 +41,19 @@ export function App() {
     setModalOpen(true);
   }
 
+  // 모달 닫을 때 modalData까지 리셋
+  function handleClose() {
+    setModalOpen(false);
+    setModalData(undefined);
+  }
+
   return (
     <>
       {/* 이벤트 모달: 열림/닫힘, 초기 데이터 props로 전달 */}
       <EventModal
         isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        initialData={modalData as Event}
+        onClose={handleClose}
+        initialData={modalData}
       />
 
       <div className="flex flex-col h-screen w-full bg-white">
@@ -56,14 +72,13 @@ export function App() {
                 currentDate={currentDate}
                 setCurrentDate={setCurrentDate}
                 onCreate={() =>
-                  // 사이드바에서 클릭한 만들기 버튼 -> 오늘 날짜, 종일을 디폴트로
-                  handleCreate(new Date().toISOString().slice(0, 10), null)
+                  // 로컬 기준의 currentDate로 항상 넘기기
+                  handleCreate(getLocalIsoDate(currentDate), null)
                 }
               />
             </aside>
           )}
 
-          {/* 주간 달력 뷰 */}
           <main className="flex-1 min-h-0 h-full">
             <WeekView
               currentDate={currentDate}

@@ -22,6 +22,14 @@ function isSameOrAfterDate(a: Date, b: Date) {
   return da.getTime() >= db.getTime();
 }
 
+// 로컬 기준 YYYY-MM-DD 생성 함수
+function toLocalIso(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+}
+
 export function WeekView({
   currentDate,
   showSidebar,
@@ -53,7 +61,7 @@ export function WeekView({
     date.setDate(weekStart.getDate() + i);
     return {
       date,
-      iso: date.toISOString().slice(0, 10), // YYYY-MM-DD
+      iso: toLocalIso(date),
       dayName: new Intl.DateTimeFormat("ko-KR", { weekday: "short" }).format(
         date
       ),
@@ -74,11 +82,7 @@ export function WeekView({
   function eventsFor(cellDate: Date, hour: number | null) {
     return events.filter((ev) => {
       // 제외된 날짜 예외 처리
-      if (
-        ev.repeat.options?.exceptions?.includes(
-          cellDate.toISOString().slice(0, 10)
-        )
-      ) {
+      if (ev.repeat.options?.exceptions?.includes(toLocalIso(cellDate))) {
         return false;
       }
       if (hour === null) {
@@ -137,7 +141,8 @@ export function WeekView({
           {!showSidebar && (
             <button
               className="weekly-calendar__create-button"
-              onClick={() => onCreate(new Date().toISOString().slice(0, 10), 9)}
+              // 여기만 new Date() -> currentDate 로 교체
+              onClick={() => onCreate(toLocalIso(currentDate), 9)}
             >
               <PlusIcon size={25} />
             </button>
