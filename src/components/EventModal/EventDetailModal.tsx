@@ -79,6 +79,12 @@ export function EventDetailModal({ event, onClose, onDelete }: Props) {
       minute: "2-digit",
     });
 
+  function handleDeleteClick() {
+    if (window.confirm("삭제하시겠습니까?")) {
+      onDelete();
+    }
+  }
+
   return (
     <div className="event-modal-backdrop" onClick={onClose}>
       <div className="event-modal" onClick={(e) => e.stopPropagation()}>
@@ -111,7 +117,8 @@ export function EventDetailModal({ event, onClose, onDelete }: Props) {
           </div>
         )}
 
-        <button className="event-modal__delete" onClick={onDelete}>
+        {/* 삭제 */}
+        <button className="event-modal__delete" onClick={handleDeleteClick}>
           삭제
         </button>
       </div>

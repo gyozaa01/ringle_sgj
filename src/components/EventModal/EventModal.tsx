@@ -51,14 +51,14 @@ export function EventModal({ isOpen, onClose, initialData }: Props) {
   const [title, setTitle] = useState(initialData?.title || ""); // 이벤트 제목
   // date: YYYY-MM-DD
   const [date, setDate] = useState(
-    initialData?.start ? initialData.start.slice(0, 10) : getLocalIsoDate()
+    initialData?.start?.slice(0, 10) || getLocalIsoDate()
   );
   // startTime/endTime
   const [startTime, setStartTime] = useState(
-    initialData?.start ? initialData.start.slice(11, 16) : "09:00"
+    initialData?.start?.slice(11, 16) || "09:00"
   );
   const [endTime, setEndTime] = useState(
-    initialData?.end ? initialData.end.slice(11, 16) : "10:00"
+    initialData?.end?.slice(11, 16) || "10:00"
   );
   const [allDay, setAllDay] = useState(initialData?.allDay ?? false); // 종일 여부
   // 반복 여부(none/dailiy/weekly/yearly)
@@ -66,7 +66,14 @@ export function EventModal({ isOpen, onClose, initialData }: Props) {
     initialData?.repeat?.type || "none"
   );
   const [notes, setNotes] = useState(initialData?.notes || ""); // 상세 메모
-  const [color, setColor] = useState<string>(initialData?.color || "color3"); // 색상 옵션
+  const [color, setColor] = useState<string>(initialData?.color || ""); // 색상 옵션
+
+  // 에러 메시지 state
+  const [errors, setErrors] = useState<{
+    title?: string;
+    time?: string;
+    color?: string;
+  }>({});
 
   // initialData 변경될 때마다 폼에 반영
   useEffect(() => {
@@ -86,17 +93,27 @@ export function EventModal({ isOpen, onClose, initialData }: Props) {
     setAllDay(initialData.allDay ?? false);
     setRepeatType(initialData.repeat?.type || "none");
     setNotes(initialData.notes || "");
-    setColor(initialData.color || "color3");
+    setColor(initialData.color || "");
+    setErrors({});
   }, [initialData]);
 
-  // date에 따라 요일/월일 뽑아서 레이블 생성
-  const selected = new Date(date);
-  const weekdayLabel = KOREAN_WEEKDAYS[selected.getDay()];
-  const month = String(selected.getMonth() + 1).padStart(2, "0");
-  const day = String(selected.getDate()).padStart(2, "0");
-  const yearlyLabel = `${month}월 ${day}일`;
+  // validation 체크
+  function validate(): boolean {
+    const newErrors: typeof errors = {};
+    if (title.trim() === "") newErrors.title = "제목을 입력해주세요.";
+    if (!color) newErrors.color = "색상을 선택해주세요.";
+    if (!allDay) {
+      const [sh, sm] = startTime.split(":").map(Number);
+      const [eh, em] = endTime.split(":").map(Number);
+      if (sh > eh || (sh === eh && sm >= em))
+        newErrors.time = "시작 시간은 종료 시간보다 빨라야 합니다.";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }
 
   function handleSave() {
+    if (!validate()) return;
     // allDay면 00:00~23:59:59, 아니면 사용자가 선택한 시간으로 ISO 문자열 생성
     const startISO = allDay
       ? new Date(`${date}T00:00:00`).toISOString()
@@ -107,21 +124,22 @@ export function EventModal({ isOpen, onClose, initialData }: Props) {
 
     // 이벤트 객체 구성
     const ev: Event = {
-      id: initialData?.id || uuid(), // 기존 ID 없으면 새로 생성
-      title,
+      id: initialData?.id || uuid(),
+      title: title.trim(),
       start: startISO,
       end: endISO,
       allDay,
       repeat: {
         type: repeatType,
         options:
-          repeatType === "weekly" ? { days: [selected.getDay()] } : undefined,
+          repeatType === "weekly"
+            ? { days: [new Date(date).getDay()] }
+            : undefined,
       },
-      notes,
+      notes: notes.trim(),
       color,
     };
 
-    // 수정 모드이면 update, 새로 만들기면 add
     if (initialData?.id) dispatch(updateEvent(ev));
     else dispatch(addEvent(ev));
 
@@ -158,13 +176,22 @@ export function EventModal({ isOpen, onClose, initialData }: Props) {
           <input
             type="text"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (errors.title)
+                setErrors((prev) => ({ ...prev, title: undefined }));
+            }}
             style={{
               padding: "0.5rem",
-              border: "1px solid #d1d5db",
+              border: `1px solid ${errors.title ? "#EF4444" : "#d1d5db"}`,
               borderRadius: "4px",
             }}
           />
+          {errors.title && (
+            <span style={{ color: "#EF4444", fontSize: "0.75rem" }}>
+              {errors.title}
+            </span>
+          )}
         </label>
 
         {/* 날짜 */}
@@ -201,36 +228,55 @@ export function EventModal({ isOpen, onClose, initialData }: Props) {
               gap: "0.75rem",
             }}
           >
-            <label style={{ display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", flexDirection: "column" }}>
               <span style={{ fontSize: "0.875rem", fontWeight: 500 }}>
                 시작 시간
               </span>
               <input
                 type="time"
                 value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
+                onChange={(e) => {
+                  setStartTime(e.target.value);
+                  if (errors.time)
+                    setErrors((prev) => ({ ...prev, time: undefined }));
+                }}
                 style={{
                   padding: "0.5rem",
-                  border: "1px solid #d1d5db",
+                  border: `1px solid ${errors.time ? "#EF4444" : "#d1d5db"}`,
                   borderRadius: "4px",
                 }}
               />
-            </label>
-            <label style={{ display: "flex", flexDirection: "column" }}>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
               <span style={{ fontSize: "0.875rem", fontWeight: 500 }}>
                 종료 시간
               </span>
               <input
                 type="time"
                 value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
+                onChange={(e) => {
+                  setEndTime(e.target.value);
+                  if (errors.time)
+                    setErrors((prev) => ({ ...prev, time: undefined }));
+                }}
                 style={{
                   padding: "0.5rem",
-                  border: "1px solid #d1d5db",
+                  border: `1px solid ${errors.time ? "#EF4444" : "#d1d5db"}`,
                   borderRadius: "4px",
                 }}
               />
-            </label>
+            </div>
+            {errors.time && (
+              <span
+                style={{
+                  gridColumn: "1 / -1",
+                  color: "#EF4444",
+                  fontSize: "0.75rem",
+                }}
+              >
+                {errors.time}
+              </span>
+            )}
           </div>
         )}
 
@@ -249,8 +295,16 @@ export function EventModal({ isOpen, onClose, initialData }: Props) {
             }}
           >
             <option value="none">반복 없음</option>
-            <option value="weekly">매주 {weekdayLabel}</option>
-            <option value="yearly">매년 {yearlyLabel}</option>
+            <option value="weekly">
+              매주 {KOREAN_WEEKDAYS[new Date(date).getDay()]}
+            </option>
+            <option value="yearly">
+              매년{" "}
+              {`${String(new Date(date).getMonth() + 1).padStart(
+                2,
+                "0"
+              )}월 ${String(new Date(date).getDate()).padStart(2, "0")}일`}
+            </option>
           </select>
         </label>
 
@@ -278,7 +332,11 @@ export function EventModal({ isOpen, onClose, initialData }: Props) {
               key={opt.value}
               type="button"
               aria-label={opt.label}
-              onClick={() => setColor(opt.value)}
+              onClick={() => {
+                setColor(opt.value);
+                if (errors.color)
+                  setErrors((prev) => ({ ...prev, color: undefined }));
+              }}
               style={{
                 width: "1.5rem",
                 height: "1.5rem",
@@ -291,6 +349,11 @@ export function EventModal({ isOpen, onClose, initialData }: Props) {
             />
           ))}
         </div>
+        {errors.color && (
+          <span style={{ color: "#EF4444", fontSize: "0.75rem" }}>
+            {errors.color}
+          </span>
+        )}
       </div>
 
       {/* 취소/저장 버튼 */}
@@ -316,13 +379,20 @@ export function EventModal({ isOpen, onClose, initialData }: Props) {
         </button>
         <button
           onClick={handleSave}
+          disabled={!!errors.title || !!errors.time || !!errors.color}
           style={{
             padding: "0.5rem 1rem",
-            background: "#3b82f6",
+            background:
+              !!errors.title || !!errors.time || !!errors.color
+                ? "#9CA3AF"
+                : "#3B82F6",
             color: "white",
             border: "none",
             borderRadius: "4px",
-            cursor: "pointer",
+            cursor:
+              !!errors.title || !!errors.time || !!errors.color
+                ? "not-allowed"
+                : "pointer",
           }}
         >
           저장
