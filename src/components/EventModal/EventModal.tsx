@@ -30,6 +30,15 @@ const KOREAN_WEEKDAYS = [
   "토요일",
 ] as const;
 
+// 색상 옵션
+const COLOR_OPTIONS = [
+  { label: "색상1", value: "color1", hex: "#FFB3B3" },
+  { label: "색상2", value: "color2", hex: "#FFF5BA" },
+  { label: "색상3", value: "color3", hex: "#B3FFB3" },
+  { label: "색상4", value: "color4", hex: "#B3E0FF" },
+  { label: "색상5", value: "color5", hex: "#E0B3FF" },
+];
+
 export function EventModal({ isOpen, onClose, initialData }: Props) {
   const dispatch = useDispatch();
 
@@ -57,6 +66,7 @@ export function EventModal({ isOpen, onClose, initialData }: Props) {
     initialData?.repeat?.type || "none"
   );
   const [notes, setNotes] = useState(initialData?.notes || ""); // 상세 메모
+  const [color, setColor] = useState<string>(initialData?.color || "color3"); // 색상 옵션
 
   // initialData 변경될 때마다 폼에 반영
   useEffect(() => {
@@ -76,6 +86,7 @@ export function EventModal({ isOpen, onClose, initialData }: Props) {
     setAllDay(initialData.allDay ?? false);
     setRepeatType(initialData.repeat?.type || "none");
     setNotes(initialData.notes || "");
+    setColor(initialData.color || "color3");
   }, [initialData]);
 
   // date에 따라 요일/월일 뽑아서 레이블 생성
@@ -107,6 +118,7 @@ export function EventModal({ isOpen, onClose, initialData }: Props) {
           repeatType === "weekly" ? { days: [selected.getDay()] } : undefined,
       },
       notes,
+      color,
     };
 
     // 수정 모드이면 update, 새로 만들기면 add
@@ -257,6 +269,28 @@ export function EventModal({ isOpen, onClose, initialData }: Props) {
             }}
           />
         </label>
+
+        {/* 색상 선택 */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <span style={{ fontSize: "0.875rem", fontWeight: 500 }}>색상</span>
+          {COLOR_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              aria-label={opt.label}
+              onClick={() => setColor(opt.value)}
+              style={{
+                width: "1.5rem",
+                height: "1.5rem",
+                borderRadius: "50%",
+                border:
+                  color === opt.value ? "2px solid #000" : "1px solid #d1d5db",
+                backgroundColor: opt.hex,
+                cursor: "pointer",
+              }}
+            />
+          ))}
+        </div>
       </div>
 
       {/* 취소/저장 버튼 */}
@@ -275,6 +309,7 @@ export function EventModal({ isOpen, onClose, initialData }: Props) {
             border: "1px solid #d1d5db",
             borderRadius: "4px",
             background: "white",
+            cursor: "pointer",
           }}
         >
           취소
@@ -287,6 +322,7 @@ export function EventModal({ isOpen, onClose, initialData }: Props) {
             color: "white",
             border: "none",
             borderRadius: "4px",
+            cursor: "pointer",
           }}
         >
           저장

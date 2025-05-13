@@ -115,7 +115,7 @@
 
   &__event {
     position: absolute;
-    margin: 0 0.25rem;
+    margin: 0;
     padding: 0.25rem;
     border-radius: 0.25rem;
     font-size: 0.75rem;
@@ -141,17 +141,20 @@
       margin-top: 0.1rem;
     }
 
-    &--yellow {
-      background-color: vars.$yellow-500;
+    &--color1 {
+      background-color: vars.$color1;
     }
-    &--green {
-      background-color: vars.$green-500;
+    &--color2 {
+      background-color: vars.$color2;
     }
-    &--purple {
-      background-color: vars.$purple-500;
+    &--color3 {
+      background-color: vars.$color3;
     }
-    &--blue {
-      background-color: vars.$blue-500;
+    &--color4 {
+      background-color: vars.$color4;
+    }
+    &--color5 {
+      background-color: vars.$color5;
     }
   }
 }

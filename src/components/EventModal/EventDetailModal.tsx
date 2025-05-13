@@ -92,7 +92,7 @@ export function EventDetailModal({ event, onClose, onDelete }: Props) {
         <div className="event-modal__section">
           <strong>일정:</strong>{" "}
           {allDay
-            ? "All Day"
+            ? "종일"
             : `${formatDateTime(start)} – ${new Date(end).toLocaleTimeString(
                 "ko-KR",
                 { hour: "2-digit", minute: "2-digit" }

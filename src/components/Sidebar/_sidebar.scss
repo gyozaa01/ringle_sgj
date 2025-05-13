@@ -3,6 +3,7 @@
 .sidebar {
   width: 16rem;
   border-right: 1px solid vars.$border-color;
+  min-height: 100vh;
   padding: 1rem;
   display: flex;
   flex-direction: column;

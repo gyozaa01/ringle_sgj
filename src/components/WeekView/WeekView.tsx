@@ -37,6 +37,7 @@ export function WeekView({
   // ISO 문자열(start/end)를 Date 객체로 변환
   const events = rawEvents.map((e) => ({
     ...e,
+    // color는 store에 이미 들어있다고 가정
     startDate: new Date(e.start),
     endDate: new Date(e.end),
   }));
@@ -122,15 +123,6 @@ export function WeekView({
     });
   }
 
-  // 중첩 이벤트를 위한 색상 클래스 배열
-  const colorClasses = [
-    "weekly-calendar__event--yellow",
-    "weekly-calendar__event--green",
-    "weekly-calendar__event--purple",
-    "weekly-calendar__event--blue",
-  ];
-  const getColorClass = (i: number) => colorClasses[i % colorClasses.length];
-
   // 한 셀 높이(px)
   const CELL_HEIGHT = 56;
 
@@ -178,7 +170,7 @@ export function WeekView({
         <div className="weekly-calendar__time-column">
           {/* All Day */}
           <div className="weekly-calendar__time-slot">
-            <span>All Day</span>
+            <span>종일</span>
           </div>
           {timeSlots.map((ts) => (
             <div key={ts.hour} className="weekly-calendar__time-slot">
@@ -204,7 +196,7 @@ export function WeekView({
                   return (
                     <div
                       key={ev.id}
-                      className={`weekly-calendar__event ${getColorClass(idx)}`}
+                      className={`weekly-calendar__event weekly-calendar__event--${ev.color}`}
                       style={{
                         top: 0,
                         left: `${left}%`,
@@ -265,9 +257,7 @@ export function WeekView({
                     return (
                       <div
                         key={ev.id}
-                        className={`weekly-calendar__event ${getColorClass(
-                          idx
-                        )}`}
+                        className={`weekly-calendar__event weekly-calendar__event--${ev.color}`}
                         style={{
                           position: "absolute",
                           top: 0,

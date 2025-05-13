@@ -13,6 +13,7 @@ export interface Event {
     options?: Record<string, unknown>;
   };
   notes?: string; // 메모(필수사항 아님)
+  color: string; // 색상 선택
 }
 
 // redux state : 이벤트 목록 items로 보관
