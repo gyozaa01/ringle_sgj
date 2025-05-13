@@ -1,7 +1,6 @@
 import "./_weekview.scss";
 import { PlusIcon } from "lucide-react";
-import { useSelector, useDispatch } from "react-redux";
-import { deleteEvent } from "@/store/eventsSlice";
+import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
 import type { Event as CalendarEvent } from "@/store/eventsSlice";
 import { useState } from "react";
@@ -15,7 +14,7 @@ interface WeeklyCalendarProps {
 }
 
 // 시/분/초 제거 후 비교
-function isSameOrAfterDate(a: Date, b: Date): boolean {
+function isSameOrAfterDate(a: Date, b: Date) {
   const da = new Date(a);
   da.setHours(0, 0, 0, 0);
   const db = new Date(b);
@@ -28,23 +27,18 @@ export function WeekView({
   showSidebar,
   onCreate,
 }: WeeklyCalendarProps) {
-  const dispatch = useDispatch();
   // Redux에서 저장된 이벤트 목록 불러오기
-  const rawEvents = useSelector(
-    (s: RootState) => s.events.items
-  ) as CalendarEvent[];
+  const raw = useSelector((s: RootState) => s.events.items) as CalendarEvent[];
 
   // ISO 문자열(start/end)를 Date 객체로 변환
-  const events = rawEvents.map((e) => ({
+  const events = raw.map((e) => ({
     ...e,
     // color는 store에 이미 들어있다고 가정
     startDate: new Date(e.start),
     endDate: new Date(e.end),
   }));
-
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
-    null
-  );
+  const [selEvent, setSelEvent] = useState<CalendarEvent | null>(null);
+  const [selDateIso, setSelDateIso] = useState<string>("");
 
   // 이번 주 시작(일요일) 계산
   const weekStart = (() => {
@@ -79,7 +73,14 @@ export function WeekView({
   // 특정 날짜(cellDate)와 시간에 해당하는 이벤트만 필터링
   function eventsFor(cellDate: Date, hour: number | null) {
     return events.filter((ev) => {
-      // 종일 이벤트
+      // 제외된 날짜 예외 처리
+      if (
+        ev.repeat.options?.exceptions?.includes(
+          cellDate.toISOString().slice(0, 10)
+        )
+      ) {
+        return false;
+      }
       if (hour === null) {
         // All-day 이벤트
         if (!ev.allDay) return false;
@@ -125,11 +126,6 @@ export function WeekView({
 
   // 한 셀 높이(px)
   const CELL_HEIGHT = 56;
-
-  const handleDelete = (id: string) => {
-    dispatch(deleteEvent(id));
-    setSelectedEvent(null);
-  };
 
   return (
     <div className="weekly-calendar">
@@ -188,7 +184,11 @@ export function WeekView({
               <div
                 key={colIdx}
                 className="weekly-calendar__cell"
-                onClick={() => onCreate(d.iso, null)}
+                onClick={() => {
+                  setSelEvent(null);
+                  onCreate(d.iso, null);
+                  setSelDateIso("");
+                }}
               >
                 {evs.map((ev, idx) => {
                   const width = 100 / evs.length;
@@ -205,7 +205,8 @@ export function WeekView({
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setSelectedEvent(ev);
+                        setSelEvent(ev);
+                        setSelDateIso(d.iso);
                       }}
                     >
                       <div className="weekly-calendar__event-title">
@@ -241,7 +242,11 @@ export function WeekView({
                 <div
                   key={`${colIdx}-${ts.hour}`}
                   className="weekly-calendar__cell"
-                  onClick={() => onCreate(d.iso, ts.hour)}
+                  onClick={() => {
+                    setSelEvent(null);
+                    onCreate(d.iso, ts.hour);
+                    setSelDateIso("");
+                  }}
                 >
                   {evs.map((ev, idx) => {
                     const durationH =
@@ -267,7 +272,8 @@ export function WeekView({
                         }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          setSelectedEvent(ev);
+                          setSelEvent(ev);
+                          setSelDateIso(d.iso);
                         }}
                       >
                         <div className="weekly-calendar__event-title">
@@ -299,11 +305,11 @@ export function WeekView({
       </div>
 
       {/* 상세 모달 */}
-      {selectedEvent && (
+      {selEvent && (
         <EventDetailModal
-          event={selectedEvent}
-          onClose={() => setSelectedEvent(null)}
-          onDelete={() => handleDelete(selectedEvent.id)}
+          event={selEvent}
+          dateIso={selDateIso}
+          onClose={() => setSelEvent(null)}
         />
       )}
     </div>

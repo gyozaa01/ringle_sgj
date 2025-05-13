@@ -1,10 +1,12 @@
 import type { Event as CalendarEvent } from "@/store/eventsSlice";
+import { deleteEvent, deleteOccurrence } from "@/store/eventsSlice";
+import { useDispatch } from "react-redux";
 import "./_EventDetailModal.scss";
 
 interface Props {
-  event: CalendarEvent;
-  onClose: () => void;
-  onDelete: () => void;
+  event: CalendarEvent; // 선택된 이벤트
+  onClose: () => void; // 모달 닫기
+  dateIso: string; // 삭제 대상 날짜(YYYY-MM-DD)
 }
 
 const KOREAN_WEEKDAYS = [
@@ -33,8 +35,9 @@ function formatMonthDay(iso: string): string {
   return `${mm}월 ${dd}일`;
 }
 
-export function EventDetailModal({ event, onClose, onDelete }: Props) {
-  const { title, start, end, allDay, repeat, notes } = event;
+export function EventDetailModal({ event, onClose, dateIso }: Props) {
+  const dispatch = useDispatch();
+  const { id, title, start, end, allDay, repeat, notes } = event;
 
   /** repeat.type 에 따른 라벨 생성 */
   function getRepeatLabel(): string {
@@ -70,7 +73,7 @@ export function EventDetailModal({ event, onClose, onDelete }: Props) {
     }
   }
 
-  const formatDateTime = (iso: string): string =>
+  const formatDateTime = (iso: string) =>
     new Date(iso).toLocaleString("ko-KR", {
       year: "numeric",
       month: "2-digit",
@@ -79,10 +82,22 @@ export function EventDetailModal({ event, onClose, onDelete }: Props) {
       minute: "2-digit",
     });
 
-  function handleDeleteClick() {
-    if (window.confirm("삭제하시겠습니까?")) {
-      onDelete();
+  function confirmDelete() {
+    if (!window.confirm("정말 삭제하시겠습니까?")) return;
+    if (repeat.type !== "none") {
+      // 반복 이벤트: 한 날짜만 vs 전체
+      const onlyOne = window.confirm(
+        "이 반복 이벤트의 이 날짜만 삭제하시겠습니까? '취소' 시 전체 삭제됩니다."
+      );
+      if (onlyOne) {
+        dispatch(deleteOccurrence({ id, dateIso }));
+      } else {
+        dispatch(deleteEvent(id));
+      }
+    } else {
+      dispatch(deleteEvent(id));
     }
+    onClose();
   }
 
   return (
@@ -118,7 +133,7 @@ export function EventDetailModal({ event, onClose, onDelete }: Props) {
         )}
 
         {/* 삭제 */}
-        <button className="event-modal__delete" onClick={handleDeleteClick}>
+        <button className="event-modal__delete" onClick={confirmDelete}>
           삭제
         </button>
       </div>

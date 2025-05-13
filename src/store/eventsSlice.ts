@@ -10,7 +10,10 @@ export interface Event {
   // 반복
   repeat: {
     type: "none" | "daily" | "weekly" | "yearly" | "custom";
-    options?: Record<string, unknown>;
+    options?: {
+      days?: number[]; // 주간 반복 요일
+      exceptions?: string[]; // 삭제된 특정 날짜(ISO 문자열)
+    };
   };
   notes?: string; // 메모(필수사항 아님)
   color: string; // 색상 선택
@@ -38,13 +41,26 @@ const eventsSlice = createSlice({
       const idx = state.items.findIndex((e) => e.id === action.payload.id);
       if (idx >= 0) state.items[idx] = action.payload;
     },
-
-    // 이벤트 삭제
+    // 전체 이벤트 삭제
     deleteEvent(state, action: PayloadAction<string>) {
       state.items = state.items.filter((e) => e.id !== action.payload);
+    },
+
+    // 반복 이벤트의 특정 발생분만 삭제 (exceptions 배열에 날짜 추가)
+    deleteOccurrence(
+      state,
+      action: PayloadAction<{ id: string; dateIso: string }>
+    ) {
+      const ev = state.items.find((e) => e.id === action.payload.id);
+      if (ev && ev.repeat.type !== "none") {
+        ev.repeat.options = ev.repeat.options || {};
+        const ex = ev.repeat.options.exceptions || [];
+        ev.repeat.options.exceptions = [...ex, action.payload.dateIso];
+      }
     },
   },
 });
 
-export const { addEvent, updateEvent, deleteEvent } = eventsSlice.actions;
+export const { addEvent, updateEvent, deleteEvent, deleteOccurrence } =
+  eventsSlice.actions;
 export default eventsSlice.reducer;
