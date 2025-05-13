@@ -121,6 +121,25 @@
     font-size: 0.75rem;
     color: black;
     overflow: hidden;
+    box-sizing: border-box;
+    max-height: 3.5rem;
+    transition: filter 0.1s ease-in-out;
+
+    &:hover {
+      filter: brightness(1.1);
+    }
+
+    &-title {
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    &-time {
+      font-size: 0.6rem;
+      margin-top: 0.1rem;
+    }
 
     &--yellow {
       background-color: vars.$yellow-500;

@@ -19,6 +19,17 @@ function getLocalIsoDate(date: Date = new Date()): string {
   return `${y}-${m}-${d}`;
 }
 
+// 요일 한글 매핑
+const KOREAN_WEEKDAYS = [
+  "일요일",
+  "월요일",
+  "화요일",
+  "수요일",
+  "목요일",
+  "금요일",
+  "토요일",
+] as const;
+
 export function EventModal({ isOpen, onClose, initialData }: Props) {
   const dispatch = useDispatch();
 
@@ -50,7 +61,7 @@ export function EventModal({ isOpen, onClose, initialData }: Props) {
   // initialData 변경될 때마다 폼에 반영
   useEffect(() => {
     if (!initialData) return;
-
+    setTitle(initialData.title || "");
     if (initialData.start) {
       setDate(initialData.start.slice(0, 10));
       setStartTime(initialData.start.slice(11, 16));
@@ -65,10 +76,15 @@ export function EventModal({ isOpen, onClose, initialData }: Props) {
     setAllDay(initialData.allDay ?? false);
     setRepeatType(initialData.repeat?.type || "none");
     setNotes(initialData.notes || "");
-    setTitle(initialData.title || "");
   }, [initialData]);
 
-  // 저장 버튼
+  // date에 따라 요일/월일 뽑아서 레이블 생성
+  const selected = new Date(date);
+  const weekdayLabel = KOREAN_WEEKDAYS[selected.getDay()];
+  const month = String(selected.getMonth() + 1).padStart(2, "0");
+  const day = String(selected.getDate()).padStart(2, "0");
+  const yearlyLabel = `${month}월 ${day}일`;
+
   function handleSave() {
     // allDay면 00:00~23:59:59, 아니면 사용자가 선택한 시간으로 ISO 문자열 생성
     const startISO = allDay
@@ -85,7 +101,11 @@ export function EventModal({ isOpen, onClose, initialData }: Props) {
       start: startISO,
       end: endISO,
       allDay,
-      repeat: { type: repeatType },
+      repeat: {
+        type: repeatType,
+        options:
+          repeatType === "weekly" ? { days: [selected.getDay()] } : undefined,
+      },
       notes,
     };
 
@@ -102,16 +122,10 @@ export function EventModal({ isOpen, onClose, initialData }: Props) {
       onRequestClose={onClose}
       style={{
         overlay: {
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
           backgroundColor: "rgba(0,0,0,0.4)",
           zIndex: 1000,
         },
         content: {
-          position: "absolute",
           top: "50%",
           left: "50%",
           transform: "translate(-50%,-50%)",
@@ -222,10 +236,9 @@ export function EventModal({ isOpen, onClose, initialData }: Props) {
               borderRadius: "4px",
             }}
           >
-            <option value="none">반복 안함</option>
-            <option value="daily">매일</option>
-            <option value="weekly">매주</option>
-            <option value="yearly">매년</option>
+            <option value="none">반복 없음</option>
+            <option value="weekly">매주 {weekdayLabel}</option>
+            <option value="yearly">매년 {yearlyLabel}</option>
           </select>
         </label>
 

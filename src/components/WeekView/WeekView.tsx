@@ -1,8 +1,11 @@
 import "./_weekview.scss";
 import { PlusIcon } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { deleteEvent } from "@/store/eventsSlice";
 import type { RootState } from "@/store";
 import type { Event as CalendarEvent } from "@/store/eventsSlice";
+import { useState } from "react";
+import { EventDetailModal } from "@/components/EventModal/EventDetailModal";
 
 interface WeeklyCalendarProps {
   currentDate: Date; // 현재 보고 있는 날짜
@@ -25,6 +28,7 @@ export function WeekView({
   showSidebar,
   onCreate,
 }: WeeklyCalendarProps) {
+  const dispatch = useDispatch();
   // Redux에서 저장된 이벤트 목록 불러오기
   const rawEvents = useSelector(
     (s: RootState) => s.events.items
@@ -36,6 +40,10 @@ export function WeekView({
     startDate: new Date(e.start),
     endDate: new Date(e.end),
   }));
+
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
+    null
+  );
 
   // 이번 주 시작(일요일) 계산
   const weekStart = (() => {
@@ -126,6 +134,11 @@ export function WeekView({
   // 한 셀 높이(px)
   const CELL_HEIGHT = 56;
 
+  const handleDelete = (id: string) => {
+    dispatch(deleteEvent(id));
+    setSelectedEvent(null);
+  };
+
   return (
     <div className="weekly-calendar">
       {/* 헤더 */}
@@ -193,14 +206,34 @@ export function WeekView({
                       key={ev.id}
                       className={`weekly-calendar__event ${getColorClass(idx)}`}
                       style={{
-                        position: "absolute",
                         top: 0,
                         left: `${left}%`,
                         width: `${width}%`,
                         height: `${CELL_HEIGHT}px`,
                       }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedEvent(ev);
+                      }}
                     >
-                      {ev.title}
+                      <div className="weekly-calendar__event-title">
+                        {ev.title}
+                      </div>
+                      <div className="weekly-calendar__event-time">
+                        {`${ev.startDate
+                          .getHours()
+                          .toString()
+                          .padStart(2, "0")}:${ev.startDate
+                          .getMinutes()
+                          .toString()
+                          .padStart(2, "0")} – ${ev.endDate
+                          .getHours()
+                          .toString()
+                          .padStart(2, "0")}:${ev.endDate
+                          .getMinutes()
+                          .toString()
+                          .padStart(2, "0")}`}
+                      </div>
                     </div>
                   );
                 })}
@@ -242,8 +275,29 @@ export function WeekView({
                           width: `${width}%`,
                           height: `${height}px`,
                         }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedEvent(ev);
+                        }}
                       >
-                        {ev.title}
+                        <div className="weekly-calendar__event-title">
+                          {ev.title}
+                        </div>
+                        <div className="weekly-calendar__event-time">
+                          {`${ev.startDate
+                            .getHours()
+                            .toString()
+                            .padStart(2, "0")}:${ev.startDate
+                            .getMinutes()
+                            .toString()
+                            .padStart(2, "0")} – ${ev.endDate
+                            .getHours()
+                            .toString()
+                            .padStart(2, "0")}:${ev.endDate
+                            .getMinutes()
+                            .toString()
+                            .padStart(2, "0")}`}
+                        </div>
                       </div>
                     );
                   })}
@@ -253,6 +307,15 @@ export function WeekView({
           )}
         </div>
       </div>
+
+      {/* 상세 모달 */}
+      {selectedEvent && (
+        <EventDetailModal
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+          onDelete={() => handleDelete(selectedEvent.id)}
+        />
+      )}
     </div>
   );
 }
