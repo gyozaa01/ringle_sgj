@@ -11,6 +11,10 @@
     grid-template-columns: 4rem repeat(7, 1fr);
     border-bottom: 1px solid vars.$border-color;
     height: 3.5rem;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
   }
 
   &__header-first-cell {
@@ -71,6 +75,7 @@
     display: flex;
     flex: 1;
     overflow: auto;
+    min-height: 0;
   }
 
   &__time-column {
@@ -101,13 +106,15 @@
     border-top: 1px solid vars.$border-color;
     border-left: 1px solid vars.$border-color;
     position: relative;
+
+    &:hover {
+      background-color: rgba(59, 130, 246, 0.05);
+      cursor: pointer;
+    }
   }
 
   &__event {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
     margin: 0 0.25rem;
     padding: 0.25rem;
     border-radius: 0.25rem;
@@ -123,6 +130,9 @@
     }
     &--purple {
       background-color: vars.$purple-500;
+    }
+    &--blue {
+      background-color: vars.$blue-500;
     }
   }
 }

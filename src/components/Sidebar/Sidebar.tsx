@@ -4,9 +4,14 @@ import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "lucide-react";
 interface SidebarProps {
   currentDate: Date;
   setCurrentDate: (date: Date) => void;
+  onCreate: () => void;
 }
 
-export function Sidebar({ currentDate, setCurrentDate }: SidebarProps) {
+export function Sidebar({
+  currentDate,
+  setCurrentDate,
+  onCreate,
+}: SidebarProps) {
   // 해당 월의 1일이 무슨 요일인지 파악해서 빈 cell 채우기
   const generateCalendarDays = () => {
     // 이번 달 1일이 가리키는 Date 객체
@@ -79,7 +84,7 @@ export function Sidebar({ currentDate, setCurrentDate }: SidebarProps) {
   return (
     <aside className="sidebar">
       {/* 만들기 버튼 */}
-      <button className="sidebar__create-button">
+      <button className="sidebar__create-button" onClick={onCreate}>
         <PlusIcon size={16} />
         만들기
       </button>

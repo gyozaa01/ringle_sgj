@@ -1,131 +1,130 @@
 import "./_weekview.scss";
 import { PlusIcon } from "lucide-react";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/store";
+import type { Event as CalendarEvent } from "@/store/eventsSlice";
 
 interface WeeklyCalendarProps {
   currentDate: Date; // 현재 보고 있는 날짜
   showSidebar: boolean; // 사이드바 노출 여부
-  toggleSidebar: () => void; // 토글 핸들러
+  // 날짜와 시간을 전달
+  onCreate: (dateIso: string, hour: number | null) => void;
+}
+
+// 시/분/초 제거 후 비교
+function isSameOrAfterDate(a: Date, b: Date): boolean {
+  const da = new Date(a);
+  da.setHours(0, 0, 0, 0);
+  const db = new Date(b);
+  db.setHours(0, 0, 0, 0);
+  return da.getTime() >= db.getTime();
 }
 
 export function WeekView({
   currentDate,
   showSidebar,
-  toggleSidebar,
+  onCreate,
 }: WeeklyCalendarProps) {
-  // 이번 시작일인 일요일 구하기
-  const getStartOfWeek = (date: Date) => {
-    const result = new Date(date);
+  // Redux에서 저장된 이벤트 목록 불러오기
+  const rawEvents = useSelector(
+    (s: RootState) => s.events.items
+  ) as CalendarEvent[];
 
-    // getDay()가 0(일)부터 6(토)까지 반환하므로
-    // 오늘에서 요일만큼 빼면 해당 주의 일요일
-    result.setDate(result.getDate() - result.getDay());
-    return result;
-  };
+  // ISO 문자열(start/end)를 Date 객체로 변환
+  const events = rawEvents.map((e) => ({
+    ...e,
+    startDate: new Date(e.start),
+    endDate: new Date(e.end),
+  }));
+
+  // 이번 주 시작(일요일) 계산
+  const weekStart = (() => {
+    const d = new Date(currentDate);
+    d.setDate(d.getDate() - d.getDay());
+    return d;
+  })();
 
   // 요일 헤더 생성(일~토)
-  const generateWeekDays = () =>
-    Array.from({ length: 7 }).map((_, i) => {
-      const weekStart = getStartOfWeek(currentDate);
-      const date = new Date(weekStart);
-
-      date.setDate(weekStart.getDate() + i);
-
-      return {
-        date,
-        dayName: new Intl.DateTimeFormat("ko-KR", { weekday: "short" }).format(
-          date
-        ),
-        dayNumber: date.getDate(),
-        isToday: date.toDateString() === new Date().toDateString(), // 오늘
-      };
-    });
+  const weekDays = Array.from({ length: 7 }).map((_, i) => {
+    const date = new Date(weekStart);
+    date.setDate(weekStart.getDate() + i);
+    return {
+      date,
+      iso: date.toISOString().slice(0, 10), // YYYY-MM-DD
+      dayName: new Intl.DateTimeFormat("ko-KR", { weekday: "short" }).format(
+        date
+      ),
+      dayNumber: date.getDate(), // 1~31
+      isToday: date.toDateString() === new Date().toDateString(),
+    };
+  });
 
   // 왼쪽 시간 축 생성(12am ~ 23pm)
-  const generateTimeSlots = () =>
-    Array.from({ length: 24 }).map((_, hour) => ({
-      hour,
-      label: `${hour === 0 ? "12" : hour > 12 ? hour - 12 : hour}${
-        hour >= 12 ? "pm" : "am"
-      }`,
-    }));
+  const timeSlots = Array.from({ length: 24 }).map((_, hour) => ({
+    hour,
+    label: `${hour === 0 ? "12" : hour > 12 ? hour - 12 : hour}${
+      hour >= 12 ? "pm" : "am"
+    }`,
+  }));
 
-  const weekDays = generateWeekDays();
-  const timeSlots = generateTimeSlots();
+  // 특정 날짜(cellDate)와 시간에 해당하는 이벤트만 필터링
+  function eventsFor(cellDate: Date, hour: number | null) {
+    return events.filter((ev) => {
+      // 종일 이벤트
+      if (hour === null) {
+        // All-day 이벤트
+        if (!ev.allDay) return false;
 
-  // 더미 이벤트
-  const events = [
-    {
-      id: 1,
-      title: "공부하기",
-      start: new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        currentDate.getDate(),
-        10,
-        0
-      ),
-      end: new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        currentDate.getDate(),
-        11,
-        30
-      ),
-      color: "weekly-calendar__event--yellow",
-    },
-    {
-      id: 2,
-      title: "점심 약속",
-      start: new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        currentDate.getDate() + 1,
-        12,
-        0
-      ),
-      end: new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        currentDate.getDate() + 1,
-        13,
-        30
-      ),
-      color: "weekly-calendar__event--green",
-    },
-    {
-      id: 3,
-      title: "회의 준비",
-      start: new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        currentDate.getDate() + 2,
-        14,
-        0
-      ),
-      end: new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        currentDate.getDate() + 2,
-        15,
-        40
-      ),
-      color: "weekly-calendar__event--purple",
-    },
-  ];
-
-  // 각 셀에 해당하는 이벤트 필터링
-  const getEventsForCell = (day: number, hour: number) => {
-    const cellDate = weekDays[day].date;
-
-    return events.filter((e) => {
-      return (
-        e.start.getDate() === cellDate.getDate() &&
-        e.start.getMonth() === cellDate.getMonth() &&
-        e.start.getFullYear() === cellDate.getFullYear() &&
-        e.start.getHours() === hour
-      );
+        switch (ev.repeat.type) {
+          // 매주 반복: 시간 요일 일치 & 셀 날짜 >= 시작 날짜
+          case "weekly":
+            return (
+              ev.startDate.getDay() === cellDate.getDay() &&
+              isSameOrAfterDate(cellDate, ev.startDate)
+            );
+          // 매년 반복: 월&일 같고 셀 날짜 >= 시작 날짜
+          case "yearly":
+            return (
+              ev.startDate.getMonth() === cellDate.getMonth() &&
+              ev.startDate.getDate() === cellDate.getDate() &&
+              isSameOrAfterDate(cellDate, ev.startDate)
+            );
+          // 정확히 같은 날짜 -> 반복 없음
+          default:
+            return ev.startDate.toDateString() === cellDate.toDateString();
+        }
+      }
+      // 시간 이벤트
+      if (ev.allDay || ev.startDate.getHours() !== hour) return false;
+      switch (ev.repeat.type) {
+        case "weekly":
+          return (
+            ev.startDate.getDay() === cellDate.getDay() &&
+            isSameOrAfterDate(cellDate, ev.startDate)
+          );
+        case "yearly":
+          return (
+            ev.startDate.getMonth() === cellDate.getMonth() &&
+            ev.startDate.getDate() === cellDate.getDate() &&
+            isSameOrAfterDate(cellDate, ev.startDate)
+          );
+        default:
+          return ev.startDate.toDateString() === cellDate.toDateString();
+      }
     });
-  };
+  }
+
+  // 중첩 이벤트를 위한 색상 클래스 배열
+  const colorClasses = [
+    "weekly-calendar__event--yellow",
+    "weekly-calendar__event--green",
+    "weekly-calendar__event--purple",
+    "weekly-calendar__event--blue",
+  ];
+  const getColorClass = (i: number) => colorClasses[i % colorClasses.length];
+
+  // 한 셀 높이(px)
+  const CELL_HEIGHT = 56;
 
   return (
     <div className="weekly-calendar">
@@ -133,10 +132,11 @@ export function WeekView({
       <div className="weekly-calendar__header">
         <div className="weekly-calendar__header-first-cell">
           <div className="weekly-calendar__time-placeholder" />
+          {/* 사이드바 없을 땐 상단 +버튼 : 디폴트 오전 9시 */}
           {!showSidebar && (
             <button
               className="weekly-calendar__create-button"
-              onClick={toggleSidebar}
+              onClick={() => onCreate(new Date().toISOString().slice(0, 10), 9)}
             >
               <PlusIcon size={25} />
             </button>
@@ -163,41 +163,93 @@ export function WeekView({
       <div className="weekly-calendar__body">
         {/* 시간 */}
         <div className="weekly-calendar__time-column">
-          {timeSlots.map((slot) => (
-            <div key={slot.hour} className="weekly-calendar__time-slot">
-              <span>{slot.label}</span>
+          {/* All Day */}
+          <div className="weekly-calendar__time-slot">
+            <span>All Day</span>
+          </div>
+          {timeSlots.map((ts) => (
+            <div key={ts.hour} className="weekly-calendar__time-slot">
+              <span>{ts.label}</span>
             </div>
           ))}
         </div>
 
         {/* 이벤트가 표시될 날짜, 시간 그리드 */}
         <div className="weekly-calendar__days-grid">
-          {timeSlots.map((slot) =>
-            weekDays.map((_, dayIdx) => (
+          {/* All-day 행 */}
+          {weekDays.map((d, colIdx) => {
+            const evs = eventsFor(d.date, null);
+            return (
               <div
-                key={`${slot.hour}-${dayIdx}`}
+                key={colIdx}
                 className="weekly-calendar__cell"
+                onClick={() => onCreate(d.iso, null)}
               >
-                {/* 해당 셀의 이벤트들 */}
-                {getEventsForCell(dayIdx, slot.hour).map((ev) => (
-                  <div
-                    key={ev.id}
-                    className={`weekly-calendar__event ${ev.color}`}
-                    style={{
-                      // 이벤트 높이 계산
-                      height: `${
-                        (ev.end.getHours() -
-                          ev.start.getHours() +
-                          (ev.end.getMinutes() - ev.start.getMinutes()) / 60) *
-                        56
-                      }px`,
-                    }}
-                  >
-                    {ev.title}
-                  </div>
-                ))}
+                {evs.map((ev, idx) => {
+                  const width = 100 / evs.length;
+                  const left = width * idx;
+                  return (
+                    <div
+                      key={ev.id}
+                      className={`weekly-calendar__event ${getColorClass(idx)}`}
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: `${left}%`,
+                        width: `${width}%`,
+                        height: `${CELL_HEIGHT}px`,
+                      }}
+                    >
+                      {ev.title}
+                    </div>
+                  );
+                })}
               </div>
-            ))
+            );
+          })}
+
+          {/* 시간별 */}
+          {timeSlots.flatMap((ts) =>
+            weekDays.map((d, colIdx) => {
+              const evs = eventsFor(d.date, ts.hour);
+              return (
+                <div
+                  key={`${colIdx}-${ts.hour}`}
+                  className="weekly-calendar__cell"
+                  onClick={() => onCreate(d.iso, ts.hour)}
+                >
+                  {evs.map((ev, idx) => {
+                    const durationH =
+                      (ev.endDate.getTime() - ev.startDate.getTime()) /
+                      (1000 * 60 * 60);
+                    // 최대 한 칸 높이로 제한
+                    const height = Math.min(
+                      durationH * CELL_HEIGHT,
+                      CELL_HEIGHT
+                    );
+                    const width = 100 / evs.length;
+                    const left = width * idx;
+                    return (
+                      <div
+                        key={ev.id}
+                        className={`weekly-calendar__event ${getColorClass(
+                          idx
+                        )}`}
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: `${left}%`,
+                          width: `${width}%`,
+                          height: `${height}px`,
+                        }}
+                      >
+                        {ev.title}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })
           )}
         </div>
       </div>
