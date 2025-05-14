@@ -219,6 +219,15 @@ const persistConfig = {
   </tr>
 </table>
 
+<table>
+  <tr>
+    <td align="center">
+      <img width="900" alt="이벤트 중첩" src="https://github.com/user-attachments/assets/eda149b4-7642-4c34-8761-6f47c5d9bfec">
+      <br><b>이벤트 중첩</b>
+    </td>
+  </tr>
+</table>
+
 ### 1. 이벤트 반복
 - 반복 유형 처리
   - `repeat.type === "weekly"`:  
