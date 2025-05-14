@@ -1,8 +1,11 @@
 import { useState } from "react";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/store";
 import { Header } from "@/components/Header/Header";
 import { Sidebar } from "@/components/Sidebar/Sidebar";
 import { WeekView } from "@/components/WeekView/WeekView";
 import { EventModal } from "@/components/EventModal/EventModal";
+import { SearchResults } from "@/components/SearchResults/SearchResults";
 import type { Event } from "@/store/eventsSlice";
 import "./_calendar.scss";
 
@@ -22,6 +25,10 @@ export function App() {
   const [modalData, setModalData] = useState<Partial<Event> | undefined>(
     undefined
   );
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Redux store의 전체 이벤트
+  const allEvents = useSelector((s: RootState) => s.events.items) as Event[];
 
   // WeekView에서 클릭된 dateIso(YYYY-MM-DD)와 hour(null=종일 또는 0~23)을 받아서
   // 모달을 원하는 시간대로 열어주는 함수
@@ -67,6 +74,7 @@ export function App() {
           currentDate={currentDate}
           setCurrentDate={setCurrentDate}
           toggleSidebar={() => setShowSidebar((v) => !v)}
+          onSearch={setSearchQuery}
         />
 
         <div className="flex flex-1 overflow-hidden min-h-0">
@@ -86,12 +94,25 @@ export function App() {
 
           {/* 주간 뷰 */}
           <main className="flex-1 min-h-0 h-full">
-            <WeekView
-              currentDate={currentDate}
-              showSidebar={showSidebar}
-              onCreate={handleCreate}
-              onEdit={handleEdit}
-            />
+            {searchQuery ? (
+              <SearchResults
+                events={allEvents}
+                query={searchQuery}
+                onSelectDate={(dateIso) => {
+                  // 클릭한 날짜의 주로 이동
+                  setCurrentDate(new Date(dateIso));
+                  // 검색 모드 종료
+                  setSearchQuery("");
+                }}
+              />
+            ) : (
+              <WeekView
+                currentDate={currentDate}
+                showSidebar={showSidebar}
+                onCreate={handleCreate}
+                onEdit={handleEdit}
+              />
+            )}
           </main>
         </div>
       </div>

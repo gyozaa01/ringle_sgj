@@ -59,7 +59,7 @@
 
     input {
       width: 200px;
-      padding: 0.5rem 0.75rem 0.5rem 2rem;
+      padding: 0.5rem 2.5rem 0.5rem 2rem;
       background: #f3f4f6;
       border-radius: 0.5rem;
       border: none;
@@ -78,6 +78,22 @@
       top: 50%;
       transform: translateY(-50%);
       color: vars.$text-gray;
+    }
+
+    &-button {
+      position: absolute;
+      top: 50%;
+      right: 0.75rem;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      padding: 0;
+      color: vars.$text-gray;
+      cursor: pointer;
+
+      &:focus {
+        outline: none;
+      }
     }
   }
 

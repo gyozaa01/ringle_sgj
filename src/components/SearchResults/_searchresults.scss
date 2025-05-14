@@ -1,0 +1,53 @@
+@use "sass:color";
+
+.search-results {
+  padding: 1rem;
+}
+
+.search-results__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.search-results__date-circle {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: #3b82f6;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  cursor: pointer;
+
+  &:hover {
+    background: color.adjust(#3b82f6, $lightness: -10%);
+  }
+}
+
+.search-results__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.search-results__date,
+.search-results__time {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.search-results__title {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.search-results__none {
+  padding: 1rem;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
