@@ -99,6 +99,8 @@
     flex: 1;
     display: grid;
     grid-template-columns: repeat(7, 1fr);
+    grid-auto-rows: var(--slot-height);
+    position: relative;
   }
 
   &__cell {
@@ -156,5 +158,28 @@
     &--color5 {
       background-color: vars.$color5;
     }
+  }
+
+  // 현재 시각 표시
+  &__now-line {
+    position: absolute;
+    height: 5px;
+    background: #ef4444;
+    z-index: 10;
+
+    pointer-events: auto;
+  }
+
+  &__now-dot {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    margin-top: 2px;
+    border-radius: 50%;
+    background: #ef4444;
+    transform: translate(-50%, -50%);
+    z-index: 11;
+
+    pointer-events: auto;
   }
 }

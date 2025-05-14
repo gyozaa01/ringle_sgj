@@ -3,7 +3,7 @@ import { PlusIcon } from "lucide-react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
 import type { Event as CalendarEvent } from "@/store/eventsSlice";
-import { useState } from "react";
+import { useRef, useState, useLayoutEffect } from "react";
 import { EventDetailModal } from "@/components/EventModal/EventDetailModal";
 
 interface WeeklyCalendarProps {
@@ -21,6 +21,14 @@ function isSameOrAfterDate(a: Date, b: Date) {
   db.setHours(0, 0, 0, 0);
   return da.getTime() >= db.getTime();
 }
+
+type DateInfo = {
+  date: Date;
+  iso: string;
+  dayName: string;
+  dayNumber: number;
+  isToday: boolean;
+};
 
 // 로컬 기준 YYYY-MM-DD 생성 함수
 function toLocalIso(d: Date): string {
@@ -57,7 +65,7 @@ export function WeekView({
   })();
 
   // 요일 헤더 생성(일~토)
-  const weekDays = Array.from({ length: 7 }).map((_, i) => {
+  const weekDays: DateInfo[] = Array.from({ length: 7 }).map((_, i) => {
     const date = new Date(weekStart);
     date.setDate(weekStart.getDate() + i);
     return {
@@ -129,8 +137,24 @@ export function WeekView({
     });
   }
 
-  // 한 셀 높이(px)
-  const CELL_HEIGHT = 56;
+  // 런타임 측정을 위한 ref & state
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [cellHeight, setCellHeight] = useState<number>(0);
+
+  useLayoutEffect(() => {
+    const firstCell = gridRef.current?.querySelector<HTMLElement>(
+      ".weekly-calendar__cell"
+    );
+    if (firstCell) {
+      setCellHeight(firstCell.getBoundingClientRect().height);
+    }
+  }, []);
+
+  // 현재 시간 선 그리기용 offset 계산
+  const now = new Date();
+  const todayIdx = weekDays.findIndex((d) => d.isToday);
+  const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes();
+  const topOffset = cellHeight + (minutesSinceMidnight / 60) * cellHeight;
 
   return (
     <div className="weekly-calendar">
@@ -182,8 +206,28 @@ export function WeekView({
         </div>
 
         {/* 이벤트가 표시될 날짜, 시간 그리드 */}
-        <div className="weekly-calendar__days-grid">
-          {/* All-day 행 */}
+        <div className="weekly-calendar__days-grid" ref={gridRef}>
+          {todayIdx >= 0 && cellHeight > 0 && (
+            <>
+              <div
+                className="weekly-calendar__now-line"
+                style={{
+                  top: `${topOffset}px`,
+                  left: `${(todayIdx / 7) * 100}%`,
+                  width: `${100 / 7}%`,
+                }}
+              />
+              <div
+                className="weekly-calendar__now-dot"
+                style={{
+                  top: `${topOffset}px`,
+                  left: `${(todayIdx / 7) * 100 + (100 / 7) * 0.015}%`,
+                }}
+              />
+            </>
+          )}
+
+          {/* All-day */}
           {weekDays.map((d, colIdx) => {
             const evs = eventsFor(d.date, null);
             return (
@@ -206,7 +250,7 @@ export function WeekView({
                         top: 0,
                         left: `${left}%`,
                         width: `${width}%`,
-                        height: `${CELL_HEIGHT}px`,
+                        height: `${cellHeight}px`,
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -257,10 +301,7 @@ export function WeekView({
                       (ev.endDate.getTime() - ev.startDate.getTime()) /
                       (1000 * 60 * 60);
                     // 최대 한 칸 높이로 제한
-                    const height = Math.min(
-                      durationH * CELL_HEIGHT,
-                      CELL_HEIGHT
-                    );
+                    const height = Math.min(durationH * cellHeight, cellHeight);
                     const width = 100 / evs.length;
                     const left = width * idx;
                     return (
