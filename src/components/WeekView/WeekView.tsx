@@ -297,11 +297,13 @@ export function WeekView({
                   }}
                 >
                   {evs.map((ev, idx) => {
+                    const startMin = ev.startDate.getMinutes();
+                    const minuteOffset = (startMin / 60) * cellHeight;
                     const durationH =
                       (ev.endDate.getTime() - ev.startDate.getTime()) /
                       (1000 * 60 * 60);
-                    // 최대 한 칸 높이로 제한
-                    const height = Math.min(durationH * cellHeight, cellHeight);
+                    // 실제 시간 길이만큼 높이를 계산
+                    const height = durationH * cellHeight;
                     const width = 100 / evs.length;
                     const left = width * idx;
                     return (
@@ -310,7 +312,7 @@ export function WeekView({
                         className={`weekly-calendar__event weekly-calendar__event--${ev.color}`}
                         style={{
                           position: "absolute",
-                          top: 0,
+                          top: `${minuteOffset}px`,
                           left: `${left}%`,
                           width: `${width}%`,
                           height: `${height}px`,
