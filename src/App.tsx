@@ -18,7 +18,7 @@ export function App() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showSidebar, setShowSidebar] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  // undefined 허용하도록 타입 확장
+  // create 와 edit 모두 사용할 수 있도록 undefined 허용
   const [modalData, setModalData] = useState<Partial<Event> | undefined>(
     undefined
   );
@@ -37,7 +37,12 @@ export function App() {
       end: `${dateIso}T${endTime}:00`,
       allDay,
     });
+    setModalOpen(true);
+  }
 
+  // 수정 모드
+  function handleEdit(ev: Event) {
+    setModalData(ev);
     setModalOpen(true);
   }
 
@@ -79,11 +84,13 @@ export function App() {
             </aside>
           )}
 
+          {/* 주간 뷰 */}
           <main className="flex-1 min-h-0 h-full">
             <WeekView
               currentDate={currentDate}
               showSidebar={showSidebar}
               onCreate={handleCreate}
+              onEdit={handleEdit}
             />
           </main>
         </div>

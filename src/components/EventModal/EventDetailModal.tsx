@@ -1,12 +1,14 @@
 import type { Event as CalendarEvent } from "@/store/eventsSlice";
 import { deleteEvent, deleteOccurrence } from "@/store/eventsSlice";
 import { useDispatch } from "react-redux";
+import { Edit2, Trash2 } from "lucide-react";
 import "./_EventDetailModal.scss";
 
 interface Props {
   event: CalendarEvent; // 선택된 이벤트
   onClose: () => void; // 모달 닫기
   dateIso: string; // 삭제 대상 날짜(YYYY-MM-DD)
+  onEdit: (ev: CalendarEvent) => void; // 수정 모드로 전환
 }
 
 const KOREAN_WEEKDAYS = [
@@ -35,7 +37,7 @@ function formatMonthDay(iso: string): string {
   return `${mm}월 ${dd}일`;
 }
 
-export function EventDetailModal({ event, onClose, dateIso }: Props) {
+export function EventDetailModal({ event, onClose, dateIso, onEdit }: Props) {
   const dispatch = useDispatch();
   const { id, title, start, end, allDay, repeat, notes } = event;
 
@@ -132,10 +134,23 @@ export function EventDetailModal({ event, onClose, dateIso }: Props) {
           </div>
         )}
 
-        {/* 삭제 */}
-        <button className="event-modal__delete" onClick={confirmDelete}>
-          삭제
-        </button>
+        <div className="event-modal__actions">
+          <button
+            className="event-modal__button event-modal__edit"
+            onClick={() => {
+              onClose();
+              onEdit(event);
+            }}
+          >
+            <Edit2 size={16} /> 수정
+          </button>
+          <button
+            className="event-modal__button event-modal__delete"
+            onClick={confirmDelete}
+          >
+            <Trash2 size={16} /> 삭제
+          </button>
+        </div>
       </div>
     </div>
   );

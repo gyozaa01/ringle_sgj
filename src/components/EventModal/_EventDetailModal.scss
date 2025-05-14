@@ -47,16 +47,41 @@
   }
 }
 
-.event-modal__delete {
+.event-modal__actions {
+  display: flex;
+  gap: 0.5rem;
   margin-top: 1rem;
-  background: vars.$red-500;
-  color: white;
+}
+
+.event-modal__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 0.25rem;
   cursor: pointer;
   font-size: 0.9rem;
 
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+.event-modal__edit {
+  @extend .event-modal__button;
+  background: vars.$blue-500;
+  color: white;
+
+  &:hover {
+    background: color.adjust(vars.$blue-500, $lightness: -10%);
+  }
+}
+
+.event-modal__delete {
+  @extend .event-modal__button;
+  background: vars.$red-500;
+  color: white;
   &:hover {
     background: color.adjust(vars.$red-500, $lightness: -10%);
   }

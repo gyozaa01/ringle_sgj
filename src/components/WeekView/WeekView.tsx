@@ -9,8 +9,8 @@ import { EventDetailModal } from "@/components/EventModal/EventDetailModal";
 interface WeeklyCalendarProps {
   currentDate: Date; // 현재 보고 있는 날짜
   showSidebar: boolean; // 사이드바 노출 여부
-  // 날짜와 시간을 전달
   onCreate: (dateIso: string, hour: number | null) => void;
+  onEdit: (ev: CalendarEvent) => void;
 }
 
 // 시/분/초 제거 후 비교
@@ -34,6 +34,7 @@ export function WeekView({
   currentDate,
   showSidebar,
   onCreate,
+  onEdit,
 }: WeeklyCalendarProps) {
   // Redux에서 저장된 이벤트 목록 불러오기
   const raw = useSelector((s: RootState) => s.events.items) as CalendarEvent[];
@@ -192,7 +193,6 @@ export function WeekView({
                 onClick={() => {
                   setSelEvent(null);
                   onCreate(d.iso, null);
-                  setSelDateIso("");
                 }}
               >
                 {evs.map((ev, idx) => {
@@ -210,8 +210,8 @@ export function WeekView({
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setSelEvent(ev);
                         setSelDateIso(d.iso);
+                        setSelEvent(ev);
                       }}
                     >
                       <div className="weekly-calendar__event-title">
@@ -250,7 +250,6 @@ export function WeekView({
                   onClick={() => {
                     setSelEvent(null);
                     onCreate(d.iso, ts.hour);
-                    setSelDateIso("");
                   }}
                 >
                   {evs.map((ev, idx) => {
@@ -277,8 +276,8 @@ export function WeekView({
                         }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          setSelEvent(ev);
                           setSelDateIso(d.iso);
+                          setSelEvent(ev);
                         }}
                       >
                         <div className="weekly-calendar__event-title">
@@ -315,6 +314,7 @@ export function WeekView({
           event={selEvent}
           dateIso={selDateIso}
           onClose={() => setSelEvent(null)}
+          onEdit={onEdit}
         />
       )}
     </div>

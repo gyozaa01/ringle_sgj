@@ -19,6 +19,13 @@ function getLocalIsoDate(date: Date = new Date()): string {
   return `${y}-${m}-${d}`;
 }
 
+// 로컬 시간(HH:mm) 반환
+function getLocalTime(date: Date = new Date()): string {
+  const h = String(date.getHours()).padStart(2, "0");
+  const m = String(date.getMinutes()).padStart(2, "0");
+  return `${h}:${m}`;
+}
+
 // 요일 한글 매핑
 const KOREAN_WEEKDAYS = [
   "일요일",
@@ -51,22 +58,23 @@ export function EventModal({ isOpen, onClose, initialData }: Props) {
   const [title, setTitle] = useState(initialData?.title || ""); // 이벤트 제목
   // date: YYYY-MM-DD
   const [date, setDate] = useState(
-    initialData?.start?.slice(0, 10) || getLocalIsoDate()
+    initialData?.start
+      ? getLocalIsoDate(new Date(initialData.start))
+      : getLocalIsoDate()
   );
   // startTime/endTime
   const [startTime, setStartTime] = useState(
-    initialData?.start?.slice(11, 16) || "09:00"
+    initialData?.start ? getLocalTime(new Date(initialData.start)) : "09:00"
   );
   const [endTime, setEndTime] = useState(
-    initialData?.end?.slice(11, 16) || "10:00"
+    initialData?.end ? getLocalTime(new Date(initialData.end)) : "10:00"
   );
-  const [allDay, setAllDay] = useState(initialData?.allDay ?? false); // 종일 여부
-  // 반복 여부(none/dailiy/weekly/yearly)
+  const [allDay, setAllDay] = useState(initialData?.allDay ?? false);
   const [repeatType, setRepeatType] = useState<Event["repeat"]["type"]>(
     initialData?.repeat?.type || "none"
   );
-  const [notes, setNotes] = useState(initialData?.notes || ""); // 상세 메모
-  const [color, setColor] = useState<string>(initialData?.color || ""); // 색상 옵션
+  const [notes, setNotes] = useState(initialData?.notes || "");
+  const [color, setColor] = useState(initialData?.color || "");
 
   // 에러 메시지 state
   const [errors, setErrors] = useState<{
@@ -75,18 +83,20 @@ export function EventModal({ isOpen, onClose, initialData }: Props) {
     color?: string;
   }>({});
 
-  // initialData 변경될 때마다 폼에 반영
+  // initialData가 바뀔 때 로컬 기준으로 폼에 반영
   useEffect(() => {
     if (!initialData) return;
     setTitle(initialData.title || "");
+
     if (initialData.start) {
-      setDate(initialData.start.slice(0, 10));
-      setStartTime(initialData.start.slice(11, 16));
+      const sd = new Date(initialData.start);
+      setDate(getLocalIsoDate(sd));
+      setStartTime(getLocalTime(sd));
     }
 
-    // 날짜/시간 설정
     if (initialData.end) {
-      setEndTime(initialData.end.slice(11, 16));
+      const ed = new Date(initialData.end);
+      setEndTime(getLocalTime(ed));
     }
 
     // 종일, 반복, 메모, 제목 업데이트
